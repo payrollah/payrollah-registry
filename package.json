@@ -1,0 +1,17 @@
+{
+  "name": "payrollah-registry",
+  "version": "1.0.0",
+  "description": "",
+  "scripts": {
+    "blockchain": "ganache-cli",
+    "test:sol": "truffle test",
+    "test": "concurrently -k -s first \"npm:blockchain -- --quiet\" \"npm:test:sol\""
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "concurrently": "^6.0.0",
+    "ganache-cli": "^6.12.2",
+    "truffle": "^5.2.5"
+  }
+}
