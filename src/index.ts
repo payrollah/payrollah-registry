@@ -1,0 +1,1 @@
+export {Card__factory} from "./contracts";

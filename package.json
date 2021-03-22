@@ -1,17 +1,40 @@
 {
   "name": "payrollah-registry",
   "version": "1.0.0",
+  "files": [
+    "dist",
+    "src",
+    "types",
+    "truffle-config.js"
+  ],
   "description": "",
+  "repository": "git@github.com:payrollah/payrollah-registry.git",
+  "main": "dist/index.js",
   "scripts": {
     "blockchain": "ganache-cli",
+    "build:js:copy-src": "babel src -d dist --ignore src/**/*.spec.ts,src/**/*.test.ts -x .js,.ts,.tsx --copy-files",
+    "build:js": "tsc --emitDeclarationOnly && npm run build:js:copy-src",
+    "build:sol": "truffle build",
+    "build": "npm run build:sol && npm run typechain && npm run build:js",
+    "copy-types": "rm -rf types && mkdir -p types && cp src/contracts/*.d.ts types/ && mkdir -p dist/ts/contracts && cp src/contracts/*.d.ts dist/ts/contracts",
     "test:sol": "truffle test",
-    "test": "concurrently -k -s first \"npm:blockchain -- --quiet\" \"npm:test:sol\""
+    "test": "concurrently -k -s first \"npm:blockchain -- --quiet\" \"npm:test:sol\"",
+    "typechain": "typechain --target ethers-v5 \"build/contracts/*.json\" --outDir src/contracts && npm run copy-types",
+    "semantic-release": "semantic-release"
   },
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "@babel/cli": "^7.13.10",
+    "@babel/core": "^7.13.10",
+    "@babel/preset-typescript": "^7.13.0",
+    "@openzeppelin/contracts": "^2.5.1",
+    "@typechain/ethers-v5": "^6.0.4",
     "concurrently": "^6.0.0",
     "ganache-cli": "^6.12.2",
-    "truffle": "^5.2.5"
+    "semantic-release": "^17.4.2",
+    "truffle": "^5.2.5",
+    "typechain": "^4.0.3",
+    "typescript": "^4.2.3"
   }
 }
