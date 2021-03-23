@@ -2,7 +2,7 @@ pragma solidity ^0.5.0;
 
 import "@openzeppelin/contracts/token/ERC721/ERC721Full.sol";
 
-contract Card is ERC721Full {
+contract Card3 is ERC721Full {
     address public owner;
     uint256 public numCards = 0;
 
