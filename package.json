@@ -10,6 +10,11 @@
   "description": "",
   "repository": "git@github.com:payrollah/payrollah-registry.git",
   "main": "dist/index.js",
+  "release": {
+    "branches": [
+      "main"
+    ]
+  },
   "scripts": {
     "blockchain": "ganache-cli",
     "build:js:copy-src": "babel src -d dist --ignore src/**/*.spec.ts,src/**/*.test.ts -x .js,.ts,.tsx --copy-files",
