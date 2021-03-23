@@ -1,5 +1,5 @@
 {
-  "name": "payrollah-registry",
+  "name": "@payrollah/payrollah-registry",
   "version": "1.0.0",
   "files": [
     "dist",
