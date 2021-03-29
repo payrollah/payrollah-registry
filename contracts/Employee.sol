@@ -84,27 +84,39 @@ contract Employee is ERC721Full {
         employees[employeeId].salaryPerPeriod = newSalaryAmount;
     }
 
-    function getEmployeeAddress(uint256 employeeId) public returns (address) {
+    function getEmployeeAddress(uint256 employeeId)
+        public
+        view
+        returns (address)
+    {
         return employees[employeeId].employeeAddress;
     }
 
-    function getSalaryPerPeriod(uint256 employeeId) public returns (uint256) {
+    function getSalaryPerPeriod(uint256 employeeId)
+        public
+        view
+        returns (uint256)
+    {
         return employees[employeeId].salaryPerPeriod;
     }
 
-    function getPeriodType(uint256 employeeId) public returns (periodEnum) {
+    function getPeriodType(uint256 employeeId)
+        public
+        view
+        returns (periodEnum)
+    {
         return employees[employeeId].period;
     }
 
-    function getStartDate(uint256 employeeId) public returns (uint256) {
+    function getStartDate(uint256 employeeId) public view returns (uint256) {
         return employees[employeeId].startDate;
     }
 
-    function getEndDate(uint256 employeeId) public returns (uint256) {
+    function getEndDate(uint256 employeeId) public view returns (uint256) {
         return employees[employeeId].endDate;
     }
 
-    function checkActive(uint256 employeeId) public returns (bool) {
+    function checkActive(uint256 employeeId) public view returns (bool) {
         return employees[employeeId].isActive;
     }
 

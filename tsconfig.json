@@ -1,8 +1,9 @@
 {
   "compilerOptions": {
     "outDir": "dist/ts",
-    "target": "esnext",
-    "module": "esnext",
+    "lib": ["es2019"],
+    "target": "es5",
+    "module": "commonjs",
     "moduleResolution": "node",
     "jsx": "react",
     "strict": true,

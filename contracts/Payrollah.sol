@@ -37,7 +37,7 @@ contract Payrollah {
         companyBasket = companydAddress;
     }
 
-    mapping(uint256 => mapping(uint256 => bool)) companyEmployees;
+    mapping(uint256 => uint256[]) companyEmployees;
     mapping(uint256 => salaryClaim) public claims;
 
     struct salaryClaim {
@@ -155,7 +155,7 @@ contract Payrollah {
         onlyActiveCompany(companyId)
     {
         // Add employee to the company list
-        companyEmployees[companyId][employeeId] = true;
+        companyEmployees[companyId].push(employeeId);
 
         // // Add recurring playment
         // if(employeeBasket.checkRegular(employeeId) == true){
@@ -177,7 +177,28 @@ contract Payrollah {
         view
         returns (bool)
     {
-        return companyEmployees[companyId][employeeId];
+        for (uint256 i = 0; i < companyEmployees[companyId].length; i++) {
+            if (companyEmployees[companyId][i] == employeeId) {
+                return true; //or whatever you want to do if it matches
+            }
+        }
+        return false;
+    }
+
+    function isEmployeeAddressOfCompany(
+        address employeeAddress,
+        uint256 companyId
+    ) public view returns (bool) {
+        for (uint256 i = 0; i < companyEmployees[companyId].length; i++) {
+            if (
+                employeeBasket.getEmployeeAddress(
+                    companyEmployees[companyId][i]
+                ) == employeeAddress
+            ) {
+                return true; //or whatever you want to do if it matches
+            }
+        }
+        return false;
     }
 
     function removeEmployee(uint256 employeeId, uint256 companyId)
@@ -185,7 +206,6 @@ contract Payrollah {
         onlyActiveCompany(companyId)
         onlyEmployeeOfCompany(employeeId, companyId)
     {
-        // search for and disable the employee
         employeeBasket.disableEmployee(employeeId); //or whatever you want to do if it matches
         // remove recurring payment
     }
