@@ -5,16 +5,19 @@ import "@openzeppelin/contracts/token/ERC721/ERC721Full.sol";
 contract Employee is ERC721Full {
     uint256 public numEmployee = 0;
 
-    constructor(string memory name, string memory symbol) public ERC721Full(name, symbol);
+    constructor(string memory name, string memory symbol)
+        public
+        ERC721Full(name, symbol)
+    {}
 
-    enum periodEnum { daily, weekly, biweekly, monthly }
+    enum periodEnum {daily, weekly, biweekly, monthly}
 
     struct employee {
         address employeeAddress;
-        uint salaryPerPeriod;
+        uint256 salaryPerPeriod;
         periodEnum period;
-        uint startDate;
-        uint endDate;
+        uint256 startDate;
+        uint256 endDate;
         bool isActive;
         bool isRegular;
     }
@@ -26,10 +29,13 @@ contract Employee is ERC721Full {
         address indexed employeeAddress,
         periodEnum period,
         bool isRegular
-    )
+    );
 
     modifier onlyOwner(uint256 employeeId) {
-        require(msg.sender == ownerOf(employeeId), "caller is not the owner of token");
+        require(
+            msg.sender == ownerOf(employeeId),
+            "caller is not the owner of token"
+        );
         _;
     }
 
@@ -37,14 +43,23 @@ contract Employee is ERC721Full {
         address employeeAddress,
         uint256 salaryPerPeriod,
         periodEnum period,
-        uint startDate;
-        uint endDate;
-        bool isActive;
-        bool isRegular;
+        uint256 startDate,
+        uint256 endDate,
+        bool isActive,
+        bool isRegular
     ) public {
-        employee memory newEmployee = employee(employeeAddress, salaryPerPeriod, period, startDate, isActive, isRegular);
+        employee memory newEmployee =
+            employee(
+                employeeAddress,
+                salaryPerPeriod,
+                period,
+                startDate,
+                endDate,
+                isActive,
+                isRegular
+            );
         uint256 employeeId = numEmployee++;
-        employees[employeeId] = newEmployees;
+        employees[employeeId] = newEmployee;
         _safeMint(_msgSender(), employeeId);
         emit EmployeeAdded(employeeId, employeeAddress, period, isRegular);
     }
@@ -61,7 +76,10 @@ contract Employee is ERC721Full {
     //     }
     // }
 
-    function updateSalaryAmount(uint256 employeeId, uint256 newSalaryAmount) onlyOwner(employeeId) {
+    function updateSalaryAmount(uint256 employeeId, uint256 newSalaryAmount)
+        public
+        onlyOwner(employeeId)
+    {
         require(employees[employeeId].isActive == true); // Employee needs to be active
         employees[employeeId].salaryPerPeriod = newSalaryAmount;
     }
@@ -70,7 +88,7 @@ contract Employee is ERC721Full {
         return employees[employeeId].employeeAddress;
     }
 
-    function getSalaryPerPeriod(uint256 employeeId) public return (uint256) {
+    function getSalaryPerPeriod(uint256 employeeId) public returns (uint256) {
         return employees[employeeId].salaryPerPeriod;
     }
 
@@ -78,19 +96,19 @@ contract Employee is ERC721Full {
         return employees[employeeId].period;
     }
 
-    function getStartDate(uint256 employeeId) public returns (uint) {
+    function getStartDate(uint256 employeeId) public returns (uint256) {
         return employees[employeeId].startDate;
     }
 
-    function getEndDate(uint256 employeeId) public returns (uint) {
+    function getEndDate(uint256 employeeId) public returns (uint256) {
         return employees[employeeId].endDate;
     }
 
-    function checkActive(uint256 employeeId) public returns (uint) {
+    function checkActive(uint256 employeeId) public returns (bool) {
         return employees[employeeId].isActive;
     }
 
-    function checkRegular(uint256 employeeId) public returns (uint) {
+    function checkRegular(uint256 employeeId) public returns (bool) {
         return employees[employeeId].isRegular;
     }
 }
