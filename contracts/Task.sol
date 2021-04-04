@@ -77,6 +77,14 @@ contract Task is ERC721Full {
         _;
     }
 
+    modifier onlyUncompletedTask(uint256 taskId) {
+        require(
+            !tasks[taskId].isComplete,
+            "task has been completed and approved, no more changes can be made"
+        );
+        _;
+    }
+
     function createTask(
         string memory title,
         string memory description,
@@ -99,17 +107,20 @@ contract Task is ERC721Full {
         return taskId;
     }
 
-    function isValidTask(uint256 taskId)
-        public
-        view
-        onlyValidTask(taskId)
-        returns (bool)
-    {
+    function isValidTask(uint256 taskId) public view returns (bool) {
         return taskId <= numTask;
     }
 
     function isCompletedTask(uint256 taskId) public view returns (bool) {
         return tasks[taskId].isComplete;
+    }
+
+    function isCandidate(uint256 taskId, address candidate)
+        public
+        view
+        returns (bool)
+    {
+        return tasks[taskId].candidates[candidate];
     }
 
     function getCompensation(uint256 taskId) public view returns (uint256) {
@@ -123,6 +134,7 @@ contract Task is ERC721Full {
     function addCandidates(uint256 taskId, address workerAddress)
         public
         onlyValidTask(taskId)
+        onlyUncompletedTask(taskId)
         onlyOwner(taskId)
         onlyRegisteredWorker(workerAddress)
     {
@@ -132,10 +144,11 @@ contract Task is ERC721Full {
     function assignTask(uint256 taskId, address assignedTo)
         public
         onlyValidTask(taskId)
+        onlyUncompletedTask(taskId)
         onlyOwner(taskId)
     {
         require(
-            tasks[taskId].candidates[assignedTo],
+            isCandidate(taskId, assignedTo),
             "workerId is not a candidate for the task"
         );
         tasks[taskId].assignedTo = assignedTo;
@@ -149,6 +162,7 @@ contract Task is ERC721Full {
     )
         public
         onlyValidTask(taskId)
+        onlyUncompletedTask(taskId)
         onlyOwner(taskId)
         onlyAssignee(taskId, assignee)
     {
@@ -159,6 +173,7 @@ contract Task is ERC721Full {
     function approveTask(uint256 taskId, address endorsedBy)
         public
         onlyValidTask(taskId)
+        onlyUncompletedTask(taskId)
         onlyOwner(taskId)
     {
         tasks[taskId].endorsedBy = endorsedBy;
@@ -174,6 +189,7 @@ contract calculateTaskERC721Selector {
             i.createTask.selector ^
             i.isValidTask.selector ^
             i.isCompletedTask.selector ^
+            i.isCandidate.selector ^
             i.getCompensation.selector ^
             i.getAssignee.selector ^
             i.getAssignee.selector ^

@@ -9,8 +9,8 @@ contract Job is ERC165 {
     // Only append new interface id for backward compatibility
     bytes4 private constant _INTERFACE_ID_TASK = 0xde500ce7;
 
-    enum StatusTypes {Uninitialised, InProgress, Completed}
-    StatusTypes public status = StatusTypes.Uninitialised;
+    enum StatusTypes {Created, InProgress, Completed}
+    StatusTypes public status = StatusTypes.Created;
 
     // Information on task
     Task public taskRegistry;
@@ -34,17 +34,22 @@ contract Job is ERC165 {
         description = _description;
         _registerInterface(_INTERFACE_ID_TASK);
     }
-    
-    function onERC721Received(address operator, address from, uint256 tokenId, bytes calldata data)
-        external
-        returns (bytes4)
-    {
+
+    function onERC721Received(
+        address operator,
+        address from,
+        uint256 tokenId,
+        bytes calldata data
+    ) external returns (bytes4) {
         require(
-          msg.sender == address(taskRegistry),
-          "only tokens from predefined task registry can be accepted"
+            msg.sender == address(taskRegistry),
+            "only tokens from predefined task registry can be accepted"
         );
         tasks.push(tokenId);
-        return bytes4(keccak256("onERC721Received(address,address,uint256,bytes)"));
+        return
+            bytes4(
+                keccak256("onERC721Received(address,address,uint256,bytes)")
+            );
     }
 
     modifier onlyJobOwner() {
@@ -62,6 +67,14 @@ contract Job is ERC165 {
         _;
     }
 
+    modifier onlyUncompletedJob() {
+        require(
+            status != StatusTypes.Completed,
+            "Job is already complete, no more changes can be made"
+        );
+        _;
+    }
+
     event JobCompleted(address indexed jobAddress);
 
     function isJobTask(uint256 taskId) public view returns (bool) {
@@ -76,28 +89,34 @@ contract Job is ERC165 {
         string memory _title,
         string memory _description,
         uint256 compensation
-    ) public payable onlyJobOwner {
+    ) public payable onlyJobOwner onlyUncompletedJob {
         require(msg.value == compensation, "not enough ethers sent");
         uint256 taskId =
             taskRegistry.createTask(_title, _description, compensation);
     }
 
-    function addCandidates(uint256 taskId) public onlyJobTask(taskId) {
+    function addCandidates(uint256 taskId)
+        public
+        onlyUncompletedJob
+        onlyJobTask(taskId)
+    {
         taskRegistry.addCandidates(taskId, msg.sender);
     }
 
     function assignTask(uint256 taskId, address assignedTo)
         public
         onlyJobOwner
+        onlyUncompletedJob
         onlyJobTask(taskId)
     {
         taskRegistry.assignTask(taskId, assignedTo);
-        collaborators[msg.sender] = true;
+        collaborators[assignedTo] = true;
         status = StatusTypes.InProgress;
     }
 
     function submitTask(uint256 taskId, string memory evidence)
         public
+        onlyUncompletedJob
         onlyCollaborator
     {
         taskRegistry.submitEvidence(taskId, evidence, msg.sender);
@@ -106,6 +125,7 @@ contract Job is ERC165 {
     function approveTask(uint256 taskId)
         public
         onlyJobOwner
+        onlyUncompletedJob
         onlyJobTask(taskId)
     {
         taskRegistry.approveTask(taskId, msg.sender);
@@ -121,7 +141,7 @@ contract Job is ERC165 {
         return remainingTask;
     }
 
-    function completeJob() public onlyJobOwner {
+    function completeJob() public onlyJobOwner onlyUncompletedJob {
         require(_getNumRemainingTask() == 0, "not all task are complete");
         status = StatusTypes.Completed;
         // Pay out to collaborators

@@ -46,13 +46,17 @@ contract Company is ERC721Full {
         _;
     }
 
-    function createCompany(string memory name, string memory domain) public {
+    function createCompany(string memory name, string memory domain)
+        public
+        returns (uint256)
+    {
         company memory newCompany = company(_msgSender(), domain, name, true);
         uint256 newCompanyId = ++numCompanies;
         companies[newCompanyId] = newCompany;
         companiesAddresses[_msgSender()] = newCompanyId;
         _safeMint(_msgSender(), newCompanyId);
         emit CompanyAdded(newCompanyId, _msgSender(), domain, name, true);
+        return newCompanyId;
     }
 
     function getCompanyAddress(uint256 companyId)

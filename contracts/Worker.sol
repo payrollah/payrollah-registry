@@ -37,12 +37,13 @@ contract Worker is ERC721Full {
         _;
     }
 
-    function createWorker(address workerAddress) public {
-        worker memory newWorker = worker(workerAddress, true);
+    function createWorker() public returns (uint256) {
+        worker memory newWorker = worker(_msgSender(), true);
         uint256 workerId = ++numWorker;
         workers[workerId] = newWorker;
         _safeMint(_msgSender(), workerId);
-        emit WorkerAdded(workerId, workerAddress);
+        emit WorkerAdded(workerId, _msgSender());
+        return workerId;
     }
 
     function getWorkerAddress(uint256 workerId) public view returns (address) {
