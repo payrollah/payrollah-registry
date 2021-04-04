@@ -2,18 +2,23 @@ pragma solidity ^0.5.0;
 
 import "@openzeppelin/contracts/token/ERC721/ERC721Full.sol";
 
+import "./Worker.sol";
+
 contract Task is ERC721Full {
     uint256 public numTask = 0;
+    Worker workerRegistry;
 
     // ERC165: Interface for this contract, can be calculated by calculateTaskERC721Selector()
     // Only append new interface id for backward compatibility
     bytes4 private constant _INTERFACE_ID_TASK = 0xde500ce7;
 
-    constructor(string memory name, string memory symbol)
-        public
-        ERC721Full(name, symbol)
-    {
+    constructor(
+        string memory name,
+        string memory symbol,
+        address _workerRegistry
+    ) public ERC721Full(name, symbol) {
         _registerInterface(_INTERFACE_ID_TASK);
+        workerRegistry = Worker(_workerRegistry);
     }
 
     struct task {
@@ -24,17 +29,22 @@ contract Task is ERC721Full {
         mapping(address => bool) candidates;
         address endorsedBy;
         bool isComplete;
-        // something abt pay?
+        uint256 compensation;
     }
 
     mapping(uint256 => task) public tasks;
 
-    event TaskCreated(uint256 indexed taskId, string title, string description);
+    event TaskCreated(
+        uint256 indexed taskId,
+        string title,
+        string description,
+        uint256 compensation
+    );
     event TaskAssigned(uint256 indexed taskId, address assignedTo);
     event TaskSubmittedEvidence(uint256 indexed taskId, string evidence);
     event TaskApproved(
         uint256 indexed taskId,
-        address assignedTo,
+        address indexed assignedTo,
         address endorsedBy
     );
 
@@ -59,16 +69,33 @@ contract Task is ERC721Full {
         _;
     }
 
-    function createTask(string memory title, string memory description)
-        public
-        returns (uint256)
-    {
+    modifier onlyRegisteredWorker(address workerAddress) {
+        require(
+            workerRegistry.isValidWorkerAddress(workerAddress),
+            "worker address not registered or inactive"
+        );
+        _;
+    }
+
+    function createTask(
+        string memory title,
+        string memory description,
+        uint256 compensation
+    ) public returns (uint256) {
         task memory newTask =
-            task(title, description, "", address(0), address(0), false);
+            task(
+                title,
+                description,
+                "",
+                address(0),
+                address(0),
+                false,
+                compensation
+            );
         uint256 taskId = ++numTask;
         tasks[taskId] = newTask;
         _safeMint(_msgSender(), taskId);
-        emit TaskCreated(taskId, title, description);
+        emit TaskCreated(taskId, title, description, compensation);
         return taskId;
     }
 
@@ -85,10 +112,19 @@ contract Task is ERC721Full {
         return tasks[taskId].isComplete;
     }
 
+    function getCompensation(uint256 taskId) public view returns (uint256) {
+        return tasks[taskId].compensation;
+    }
+
+    function getAssignee(uint256 taskId) public view returns (address) {
+        return tasks[taskId].assignedTo;
+    }
+
     function addCandidates(uint256 taskId, address workerAddress)
         public
         onlyValidTask(taskId)
         onlyOwner(taskId)
+        onlyRegisteredWorker(workerAddress)
     {
         tasks[taskId].candidates[workerAddress] = true;
     }
@@ -116,7 +152,6 @@ contract Task is ERC721Full {
         onlyOwner(taskId)
         onlyAssignee(taskId, assignee)
     {
-        // only allow assigned one to call
         tasks[taskId].evidence = evidence;
         emit TaskSubmittedEvidence(taskId, evidence);
     }
@@ -138,6 +173,10 @@ contract calculateTaskERC721Selector {
         return
             i.createTask.selector ^
             i.isValidTask.selector ^
+            i.isCompletedTask.selector ^
+            i.getCompensation.selector ^
+            i.getAssignee.selector ^
+            i.getAssignee.selector ^
             i.addCandidates.selector ^
             i.assignTask.selector ^
             i.submitEvidence.selector ^

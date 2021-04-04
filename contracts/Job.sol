@@ -34,6 +34,18 @@ contract Job is ERC165 {
         description = _description;
         _registerInterface(_INTERFACE_ID_TASK);
     }
+    
+    function onERC721Received(address operator, address from, uint256 tokenId, bytes calldata data)
+        external
+        returns (bytes4)
+    {
+        require(
+          msg.sender == address(taskRegistry),
+          "only tokens from predefined task registry can be accepted"
+        );
+        tasks.push(tokenId);
+        return bytes4(keccak256("onERC721Received(address,address,uint256,bytes)"));
+    }
 
     modifier onlyJobOwner() {
         require(msg.sender == jobOwner, "caller is not the job owner");
@@ -60,12 +72,14 @@ contract Job is ERC165 {
         }
     }
 
-    function addTask(string memory _title, string memory _description)
-        public
-        onlyJobOwner
-    {
-        uint256 taskId = taskRegistry.createTask(_title, _description);
-        tasks.push(taskId);
+    function addTask(
+        string memory _title,
+        string memory _description,
+        uint256 compensation
+    ) public payable onlyJobOwner {
+        require(msg.value == compensation, "not enough ethers sent");
+        uint256 taskId =
+            taskRegistry.createTask(_title, _description, compensation);
     }
 
     function addCandidates(uint256 taskId) public onlyJobTask(taskId) {
@@ -110,7 +124,12 @@ contract Job is ERC165 {
     function completeJob() public onlyJobOwner {
         require(_getNumRemainingTask() == 0, "not all task are complete");
         status = StatusTypes.Completed;
-        // payout?
+        // Pay out to collaborators
+        for (uint256 i = 0; i < tasks.length; i++) {
+            address payable assignee =
+                address(uint160(taskRegistry.getAssignee(tasks[i])));
+            assignee.transfer(taskRegistry.getCompensation(tasks[i]));
+        }
         emit JobCompleted(address(this));
     }
 }
