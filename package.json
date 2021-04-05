@@ -10,6 +10,7 @@
   "description": "",
   "repository": "git@github.com:payrollah/payrollah-registry.git",
   "main": "dist/index.js",
+  "types": "dist/ts/index.d.ts",
   "release": {
     "branches": [
       "main"
