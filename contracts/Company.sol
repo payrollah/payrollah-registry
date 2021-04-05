@@ -18,6 +18,7 @@ contract Company is ERC721Full {
     }
 
     mapping(uint256 => company) public companies;
+    mapping(address => uint256) public companiesAddresses;
 
     event CompanyAdded(
         uint256 companyId,
@@ -27,51 +28,78 @@ contract Company is ERC721Full {
         bool isActive
     );
 
-    modifier onlyCompanyOwner(uint256 companyId) {
+    modifier onlyOwner(uint256 companyId) {
         require(
-            _msgSender() == getCompanyAddress(companyId),
+            _msgSender() == ownerOf(companyId),
             "caller is not the owner of the company"
         );
         _;
     }
 
-    modifier onlyCompanyExists(uint256 companyId) {
-        require(
-            getCompanyAddress(companyId) != address(0),
-            "company does not exist"
-        );
+    modifier onlyExistingCompany(uint256 companyId) {
+        require(isExistingCompany(companyId), "company does not exist");
         _;
     }
 
     modifier onlyActiveCompany(uint256 companyId) {
-        require(checkActive(companyId) == true, "company is not active");
+        require(isActiveCompany(companyId), "company is not active");
         _;
     }
 
-    function createCompany(string memory name, string memory domain) public {
+    function createCompany(string memory name, string memory domain)
+        public
+        returns (uint256)
+    {
         company memory newCompany = company(_msgSender(), domain, name, true);
-        uint256 newCompanyId = numCompanies++;
+        uint256 newCompanyId = ++numCompanies;
         companies[newCompanyId] = newCompany;
+        companiesAddresses[_msgSender()] = newCompanyId;
         _safeMint(_msgSender(), newCompanyId);
         emit CompanyAdded(newCompanyId, _msgSender(), domain, name, true);
+        return newCompanyId;
     }
 
-    function getCompanyAddress(uint256 companyId) public returns (address) {
+    function getCompanyAddress(uint256 companyId)
+        public
+        view
+        returns (address)
+    {
         return companies[companyId].companyAddress;
     }
 
-    function checkActive(uint256 companyId)
+    function getCompanyIdByAddress(address companyAddress)
         public
-        onlyCompanyExists(companyId)
+        view
+        returns (uint256)
+    {
+        return tokenOfOwnerByIndex(companyAddress, 0);
+    }
+
+    function isActiveCompany(uint256 companyId) public view returns (bool) {
+        return companies[companyId].isActive;
+    }
+
+    function isExistingCompany(uint256 companyId) public view returns (bool) {
+        return getCompanyAddress(companyId) != address(0);
+    }
+
+    function isValidCompany(uint256 companyId) public view returns (bool) {
+        return isActiveCompany(companyId) && isExistingCompany(companyId);
+    }
+
+    function isValidCompanyAddress(address companyAddress)
+        public
+        view
         returns (bool)
     {
-        return companies[companyId].isActive;
+        uint256 companyId = getCompanyIdByAddress(companyAddress);
+        return isActiveCompany(companyId) && isExistingCompany(companyId);
     }
 
     function disableCompany(uint256 companyId)
         public
-        onlyCompanyExists(companyId)
-        onlyCompanyOwner(companyId)
+        onlyExistingCompany(companyId)
+        onlyOwner(companyId)
         onlyActiveCompany(companyId)
     {
         companies[companyId].isActive = false;
