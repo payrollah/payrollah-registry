@@ -29,6 +29,7 @@ contract Task is ERC721Full {
         mapping(address => bool) candidates;
         address endorsedBy;
         bool isComplete;
+        bool isRejected; 
         uint256 compensation;
     }
 
@@ -43,6 +44,11 @@ contract Task is ERC721Full {
     event TaskAssigned(uint256 indexed taskId, address assignedTo);
     event TaskSubmittedEvidence(uint256 indexed taskId, string evidence);
     event TaskApproved(
+        uint256 indexed taskId,
+        address indexed assignedTo,
+        address endorsedBy
+    );
+    event EvidenceRejected(
         uint256 indexed taskId,
         address indexed assignedTo,
         address endorsedBy
@@ -64,8 +70,17 @@ contract Task is ERC721Full {
         _;
     }
 
+    modifier onlyIsNotAssigned(uint256 taskId) {
+        require(isAssigned(taskId) == false, "task not assigned to anyone");
+        _;
+    }
     modifier onlyValidTask(uint256 taskId) {
         require(isValidTask(taskId), "not a valid taskId");
+        _;
+    }
+    
+    modifier onlyHasEvidenceSubmitted(uint256 taskId) {
+        require(hasEvidence(taskId), "no evidence submitted currently");
         _;
     }
 
@@ -84,6 +99,13 @@ contract Task is ERC721Full {
         );
         _;
     }
+    modifier onlyRejected(uint256 taskId) {
+        require(
+            tasks[taskId].isRejected,
+            "no evidence rejected yet"
+        );
+        _;
+    }
 
     function createTask(
         string memory title,
@@ -97,6 +119,7 @@ contract Task is ERC721Full {
                 "",
                 address(0),
                 address(0),
+                false,
                 false,
                 compensation
             );
@@ -115,12 +138,21 @@ contract Task is ERC721Full {
         return tasks[taskId].isComplete;
     }
 
+    function hasEvidence(uint256 taskId) public view returns (bool) {
+        bytes memory tempEmptyStringTest = bytes(tasks[taskId].evidence);
+        return tempEmptyStringTest.length != 0; 
+    }
+
     function isCandidate(uint256 taskId, address candidate)
         public
         view
         returns (bool)
     {
         return tasks[taskId].candidates[candidate];
+    }
+
+    function isAssigned(uint256 taskId) public view returns (bool) {
+        return tasks[taskId].assignedTo != address(0);
     }
 
     function getCompensation(uint256 taskId) public view returns (uint256) {
@@ -145,6 +177,7 @@ contract Task is ERC721Full {
         public
         onlyValidTask(taskId)
         onlyUncompletedTask(taskId)
+        onlyIsNotAssigned(taskId)
         onlyOwner(taskId)
     {
         require(
@@ -175,10 +208,43 @@ contract Task is ERC721Full {
         onlyValidTask(taskId)
         onlyUncompletedTask(taskId)
         onlyOwner(taskId)
+        onlyHasEvidenceSubmitted(taskId)
     {
         tasks[taskId].endorsedBy = endorsedBy;
         tasks[taskId].isComplete = true;
         emit TaskApproved(taskId, tasks[taskId].assignedTo, endorsedBy);
+    }
+    
+    function rejectEvidence(uint256 taskId, address endorsedBy)
+        public
+        onlyValidTask(taskId)
+        onlyUncompletedTask(taskId)
+        onlyOwner(taskId)
+        onlyHasEvidenceSubmitted(taskId)
+    {
+        tasks[taskId].endorsedBy = endorsedBy;
+        tasks[taskId].isRejected = true;
+        tasks[taskId].evidence = "";
+        emit EvidenceRejected(taskId, tasks[taskId].assignedTo, endorsedBy);
+    }
+
+    function reAssignTask(uint256 taskId, address newAssignedTo)
+        public
+        onlyValidTask(taskId)
+        onlyUncompletedTask(taskId)
+        onlyRejected(taskId)
+        onlyOwner(taskId)
+    {
+        require(
+            isCandidate(taskId, newAssignedTo),
+            "workerId is not a candidate for the task"
+        );
+        require(
+            newAssignedTo != tasks[taskId].assignedTo,
+            "cannot reAssign to same worker"
+        );
+        tasks[taskId].assignedTo = newAssignedTo;
+        emit TaskAssigned(taskId, newAssignedTo);
     }
 }
 
