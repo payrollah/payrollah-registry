@@ -10,7 +10,7 @@ contract Task is ERC721Full {
 
     // ERC165: Interface for this contract, can be calculated by calculateTaskERC721Selector()
     // Only append new interface id for backward compatibility
-    bytes4 private constant _INTERFACE_ID_TASK = 0xde500ce7;
+    bytes4 private constant _INTERFACE_ID_TASK = 0x369077fa;
 
     constructor(
         string memory name,
