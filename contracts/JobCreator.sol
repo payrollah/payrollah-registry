@@ -20,7 +20,7 @@ contract JobCreator {
         taskRegistry = Task(_taskRegistry);
     }
 
-    event JobDeployed(address indexed jobAddress);
+    event JobDeployed(address indexed jobAddress, address indexed jobOwner);
 
     function deployNewJob(string calldata _title, string calldata _description)
         external
@@ -33,7 +33,7 @@ contract JobCreator {
         );
 
         Job newJob = new Job(taskRegistry, msg.sender, _title, _description);
-        emit JobDeployed(address(newJob));
+        emit JobDeployed(address(newJob), msg.sender);
         return address(newJob);
     }
 }
