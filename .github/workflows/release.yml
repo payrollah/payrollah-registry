@@ -31,8 +31,8 @@ jobs:
       - name: Install Packages
         run: npm ci
       # Include when there is test to run!
-      # - name: Test
-      #   run: npm run test
+      - name: Test
+        run: npm run test
       - name: Build
         run: npm run build
       - name: release
