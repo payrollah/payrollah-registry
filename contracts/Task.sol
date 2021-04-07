@@ -29,7 +29,6 @@ contract Task is ERC721Full {
         mapping(address => bool) candidates;
         address endorsedBy;
         bool isComplete;
-        bool isRejected; 
         uint256 compensation;
     }
 
@@ -99,13 +98,6 @@ contract Task is ERC721Full {
         );
         _;
     }
-    modifier onlyRejected(uint256 taskId) {
-        require(
-            tasks[taskId].isRejected,
-            "no evidence rejected yet"
-        );
-        _;
-    }
 
     function createTask(
         string memory title,
@@ -119,7 +111,6 @@ contract Task is ERC721Full {
                 "",
                 address(0),
                 address(0),
-                false,
                 false,
                 compensation
             );
@@ -222,8 +213,6 @@ contract Task is ERC721Full {
         onlyOwner(taskId)
         onlyHasEvidenceSubmitted(taskId)
     {
-        tasks[taskId].endorsedBy = endorsedBy;
-        tasks[taskId].isRejected = true;
         tasks[taskId].evidence = "";
         emit EvidenceRejected(taskId, tasks[taskId].assignedTo, endorsedBy);
     }
@@ -232,7 +221,6 @@ contract Task is ERC721Full {
         public
         onlyValidTask(taskId)
         onlyUncompletedTask(taskId)
-        onlyRejected(taskId)
         onlyOwner(taskId)
     {
         require(
@@ -243,6 +231,11 @@ contract Task is ERC721Full {
             newAssignedTo != tasks[taskId].assignedTo,
             "cannot reAssign to same worker"
         );
+        require(
+            hasEvidence(taskId) == false,
+            "cannot reAssign task with pending evidence"
+        );
+    
         tasks[taskId].assignedTo = newAssignedTo;
         emit TaskAssigned(taskId, newAssignedTo);
     }

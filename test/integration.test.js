@@ -1,4 +1,8 @@
-const { expect } = require("chai").use(require("chai-as-promised"));
+const chai = require("chai");
+chai.use(require("chai-events"))
+const { expect } = chai.use(require("chai-as-promised"));
+const should = chai.should();
+const EventEmitter = require('events').EventEmitter;
 const Company = artifacts.require("Company");
 const Job = artifacts.require("Job");
 const JobCreator = artifacts.require("JobCreator");
@@ -31,6 +35,7 @@ contract("Workflow", (accounts) => {
       jobCreatorInstance = await JobCreator.new(companyInstance.address, workerInstance.address, taskInstance.address, {
         from: platform
       });
+      emitter = new EventEmitter();
     });
 
     it("should be able to register company", async () => {
@@ -66,6 +71,7 @@ contract("Workflow", (accounts) => {
       expect(title).to.be.equal(_title);
       expect(description).to.be.equal(_description);
       expect(compensation.toNumber()).to.be.equal(value);
+      emitter.should.emit("TaskCreated");
     });
 
     it("should be able to add candidate", async () => {
@@ -81,6 +87,7 @@ contract("Workflow", (accounts) => {
       await jobInstance.assignTask(1, worker1, {from: company1});
       let assignee = await taskInstance.getAssignee(1);
       expect(assignee).to.be.equal(worker1);
+      emitter.should.emit("TaskAssigned");
     });
 
     it("should be able to submit proof", async () => {
@@ -88,13 +95,26 @@ contract("Workflow", (accounts) => {
       await jobInstance.submitTask(1, _evidence, {from: worker1});
       let {evidence} = await taskInstance.tasks(1);
       expect(evidence).to.be.equal(_evidence);
+      emitter.should.emit("TaskSubmittedEvidence");
+    });
+    
+    it("should be able to reject proof", async () => {
+      await jobInstance.rejectTask(1, {from: company1});
+      let {evidence} = await taskInstance.tasks(1);
+      expect(evidence).to.be.equal("");
+      emitter.should.emit("EvidenceRejected");
     });
 
     it("should be able to approve task", async () => {
+      await jobInstance.submitTask(1, _evidence, {from: worker1});
+      let {evidence} = await taskInstance.tasks(1);
+      expect(evidence).to.be.equal(_evidence);
+      emitter.should.emit("TaskSubmittedEvidence");
       await jobInstance.approveTask(1, {from: company1});
       let {endorsedBy, isComplete} = await taskInstance.tasks(1);
       expect(endorsedBy).to.be.equal(company1);
       expect(isComplete).to.be.true;
+      emitter.should.emit("TaskApproved");
     });
 
     it("should be able to complete job", async () => {
@@ -122,6 +142,42 @@ contract("Workflow", (accounts) => {
       expect(log[0].returnValues.taskId).to.be.equal("1");
       expect(log[0].returnValues.endorsedBy).to.be.equal(company1);
       expect(log[0].returnValues.assignedTo).to.be.equal(worker1);
+    });
+
+    it("should be able to reassign task", async () => {
+      const _title = "Video";
+      const _description = "I want it to be 10 minutes long!";
+      const value = 10000;
+      await jobInstance.addTask(_title, _description, value, {from: company1, value: value});
+      let isTask = await taskInstance.isValidTask(1);
+      let {title, description, compensation} = await taskInstance.tasks(1);
+      expect(isTask).to.be.true;
+      expect(title).to.be.equal(_title);
+      expect(description).to.be.equal(_description);
+      expect(compensation.toNumber()).to.be.equal(value);
+      emitter.should.emit("TaskCreated");
+
+      await jobInstance.addCandidates(2, {from: worker1});
+      await jobInstance.addCandidates(2, {from: worker2});
+      let isCandidate1 = await taskInstance.isCandidate(2, worker1);
+      let isCandidate2 = await taskInstance.isCandidate(2, worker2);
+      expect(isCandidate1).to.be.true;
+
+      await jobInstance.assignTask(2, worker1, {from: company1});
+      let assignee = await taskInstance.getAssignee(2);
+      expect(assignee).to.be.equal(worker1);
+      emitter.should.emit("TaskAssigned");
+
+      const _evidence2 = "www.badvideolink.com"
+      await jobInstance.submitTask(2, _evidence, {from: worker1});
+      let {evidence2} = await taskInstance.tasks(2);
+      expect(evidence2).to.be.equal(_evidence2);
+      emitter.should.emit("TaskSubmittedEvidence");
+
+      await jobInstance.reAssignTask(2, worker2,{from: company1});
+      let assignee = await taskInstance.getAssignee(2);
+      expect(assignee).to.be.equal(worker2);
+      emitter.should.emit("TaskAssigned");
     });
   });
 });
