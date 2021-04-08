@@ -130,7 +130,28 @@ contract Job is ERC165 {
     {
         taskRegistry.approveTask(taskId, msg.sender);
     }
+    
+    function rejectTask(uint256 taskId)
+        public
+        onlyJobOwner
+        onlyUncompletedJob
+        onlyJobTask(taskId)
+    {
+        taskRegistry.rejectEvidence(taskId, msg.sender);
+    }
 
+    function reAssignTask(uint256 taskId, address newAssignedTo)
+        public
+        onlyJobOwner
+        onlyUncompletedJob
+        onlyJobTask(taskId)
+    {
+        address oldAssignedTo = taskRegistry.getAssignee(taskId);
+        collaborators[newAssignedTo] = true;
+        collaborators[oldAssignedTo] = false;
+        taskRegistry.reAssignTask(taskId, newAssignedTo);
+    }
+    
     function _getNumRemainingTask() internal view returns (uint256) {
         uint256 remainingTask = 0;
         for (uint256 i = 0; i < tasks.length; i++) {
