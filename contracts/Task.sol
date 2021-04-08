@@ -26,7 +26,8 @@ contract Task is ERC721Full {
         string description;
         string evidence;
         address assignedTo;
-        mapping(address => bool) candidates;
+        mapping(address => bool) isCandidate;
+        address[] candidates;
         address endorsedBy;
         bool isComplete;
         uint256 compensation;
@@ -44,7 +45,11 @@ contract Task is ERC721Full {
         uint256 compensation
     );
     event TaskAssigned(uint256 indexed taskId, address assignedTo);
-    event TaskReAssigned(uint256 indexed taskId, address oldAssignedTo, address newAssignedTo);
+    event TaskReAssigned(
+        uint256 indexed taskId,
+        address oldAssignedTo,
+        address newAssignedTo
+    );
     event TaskSubmittedEvidence(uint256 indexed taskId, string evidence);
     event TaskApproved(
         uint256 indexed taskId,
@@ -81,7 +86,7 @@ contract Task is ERC721Full {
         require(isValidTask(taskId), "not a valid taskId");
         _;
     }
-    
+
     modifier onlyHasEvidenceSubmitted(uint256 taskId) {
         require(hasEvidence(taskId), "no evidence submitted currently");
         _;
@@ -108,16 +113,10 @@ contract Task is ERC721Full {
         string memory description,
         uint256 compensation
     ) public returns (uint256) {
-        task memory newTask =
-            task(
-                title,
-                description,
-                "",
-                address(0),
-                address(0),
-                false,
-                compensation
-            );
+        task memory newTask;
+        newTask.title = title;
+        newTask.description = description;
+        newTask.compensation = compensation;
         uint256 taskId = ++numTask;
         tasks[taskId] = newTask;
         _safeMint(_msgSender(), taskId);
@@ -135,7 +134,7 @@ contract Task is ERC721Full {
 
     function hasEvidence(uint256 taskId) public view returns (bool) {
         bytes memory tempEmptyStringTest = bytes(tasks[taskId].evidence);
-        return tempEmptyStringTest.length != 0; 
+        return tempEmptyStringTest.length != 0;
     }
 
     function isCandidate(uint256 taskId, address candidate)
@@ -143,7 +142,7 @@ contract Task is ERC721Full {
         view
         returns (bool)
     {
-        return tasks[taskId].candidates[candidate];
+        return tasks[taskId].isCandidate[candidate];
     }
 
     function isAssigned(uint256 taskId) public view returns (bool) {
@@ -158,6 +157,30 @@ contract Task is ERC721Full {
         return tasks[taskId].assignedTo;
     }
 
+    function getTaskByJob(address jobAddress)
+        public
+        view
+        returns (uint256[] memory)
+    {
+        return _tokensOfOwner(jobAddress);
+    }
+
+    function getTaskByWorkerAddress(address workerAddress)
+        public
+        view
+        returns (uint256[] memory)
+    {
+        return tasksInProgress[workerAddress];
+    }
+
+    function getCandidateByTask(uint256 taskId)
+        public
+        view
+        returns (address[] memory)
+    {
+        return tasks[taskId].candidates;
+    }
+
     function addCandidates(uint256 taskId, address workerAddress)
         public
         onlyValidTask(taskId)
@@ -165,7 +188,10 @@ contract Task is ERC721Full {
         onlyOwner(taskId)
         onlyRegisteredWorker(workerAddress)
     {
-        tasks[taskId].candidates[workerAddress] = true;
+        if (!isCandidate(taskId, workerAddress)) {
+            tasks[taskId].candidates.push(workerAddress);
+            tasks[taskId].isCandidate[workerAddress] = true;
+        }
     }
 
     function assignTask(uint256 taskId, address assignedTo)
@@ -211,7 +237,7 @@ contract Task is ERC721Full {
         _removeTaskIdFromWorkerEnumeration(tasks[taskId].assignedTo, taskId);
         emit TaskApproved(taskId, tasks[taskId].assignedTo, endorsedBy);
     }
-    
+
     function rejectEvidence(uint256 taskId, address endorsedBy)
         public
         onlyValidTask(taskId)
@@ -244,12 +270,17 @@ contract Task is ERC721Full {
         emit TaskReAssigned(taskId, oldAssignedTo, newAssignedTo);
     }
 
-    function _addTaskIdToWorkerEnumeration(address assignedTo, uint256 taskId) private {
+    function _addTaskIdToWorkerEnumeration(address assignedTo, uint256 taskId)
+        private
+    {
         _taskIndex[taskId] = tasksInProgress[assignedTo].length;
         tasksInProgress[assignedTo].push(taskId);
     }
 
-    function _removeTaskIdFromWorkerEnumeration(address assignedTo, uint256 taskId) private {
+    function _removeTaskIdFromWorkerEnumeration(
+        address assignedTo,
+        uint256 taskId
+    ) private {
         uint256 lastIndex = tasksInProgress[assignedTo].length.sub(1);
         uint256 index = _taskIndex[taskId];
 
