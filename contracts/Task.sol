@@ -224,10 +224,6 @@ contract Task is ERC721Full {
         onlyOwner(taskId)
     {
         require(
-            isCandidate(taskId, newAssignedTo),
-            "workerId is not a candidate for the task"
-        );
-        require(
             newAssignedTo != tasks[taskId].assignedTo,
             "cannot reAssign to same worker"
         );
@@ -235,9 +231,8 @@ contract Task is ERC721Full {
             hasEvidence(taskId) == false,
             "cannot reAssign task with pending evidence"
         );
-    
-        tasks[taskId].assignedTo = newAssignedTo;
-        emit TaskAssigned(taskId, newAssignedTo);
+        tasks[taskId].assignedTo = address(0);
+        assignTask(taskId, newAssignedTo);
     }
 }
 

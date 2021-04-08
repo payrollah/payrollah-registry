@@ -146,6 +146,9 @@ contract Job is ERC165 {
         onlyUncompletedJob
         onlyJobTask(taskId)
     {
+        address oldAssignedTo = taskRegistry.getAssignee(taskId);
+        collaborators[newAssignedTo] = true;
+        collaborators[oldAssignedTo] = false;
         taskRegistry.reAssignTask(taskId, newAssignedTo);
     }
     
