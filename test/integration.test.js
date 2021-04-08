@@ -61,8 +61,10 @@ contract("Workflow", (accounts) => {
       const value = 10000;
       await jobInstance.addTask(_title, _description, value, {from: company1, value: value});
       let isTask = await taskInstance.isValidTask(1);
+      let tasks = await taskInstance.getTaskByJob(jobInstance.address);
       let {title, description, compensation} = await taskInstance.tasks(1);
       expect(isTask).to.be.true;
+      expect(tasks[0].toNumber()).to.be.equal(1);
       expect(title).to.be.equal(_title);
       expect(description).to.be.equal(_description);
       expect(compensation.toNumber()).to.be.equal(value);
@@ -73,16 +75,20 @@ contract("Workflow", (accounts) => {
       await jobInstance.addCandidates(1, {from: worker2});
       let isCandidate1 = await taskInstance.isCandidate(1, worker1);
       let isCandidate2 = await taskInstance.isCandidate(1, worker2);
+      let candidates = await taskInstance.getCandidateByTask(1);
       expect(isCandidate1).to.be.true;
       expect(isCandidate2).to.be.true;
-
+      expect(candidates[0]).to.be.equal(worker1);
+      expect(candidates[1]).to.be.equal(worker2);
     });
 
     it("should be able to assign candidate", async () => {
       await jobInstance.assignTask(1, worker1, {from: company1});
       let isCollaborator1 = await jobInstance.collaborators(worker1);
       let assignee = await taskInstance.getAssignee(1);
+      let tasks = await taskInstance.getTaskByWorkerAddress(worker1);
       expect(assignee).to.be.equal(worker1);
+      expect(tasks[0].toNumber()).to.be.equal(1);
       expect(isCollaborator1).to.be.true;
     });
 
@@ -178,8 +184,10 @@ contract("Workflow", (accounts) => {
       const value = 10000;
       await jobInstance.addTask(_title, _description, value, {from: company1, value: value});
       let isTask = await taskInstance.isValidTask(1);
+      let tasks = await taskInstance.getTaskByJob(jobInstance.address);
       let {title, description, compensation} = await taskInstance.tasks(1);
       expect(isTask).to.be.true;
+      expect(tasks[0].toNumber()).to.be.equal(1);
       expect(title).to.be.equal(_title);
       expect(description).to.be.equal(_description);
       expect(compensation.toNumber()).to.be.equal(value);
@@ -190,15 +198,20 @@ contract("Workflow", (accounts) => {
       await jobInstance.addCandidates(1, {from: worker2});
       let isCandidate1 = await taskInstance.isCandidate(1, worker1);
       let isCandidate2 = await taskInstance.isCandidate(1, worker2);
+      let candidates = await taskInstance.getCandidateByTask(1);
       expect(isCandidate1).to.be.true;
       expect(isCandidate2).to.be.true;
+      expect(candidates[0]).to.be.equal(worker1);
+      expect(candidates[1]).to.be.equal(worker2);
     });
 
     it("should be able to assign candidate", async () => {
       await jobInstance.assignTask(1, worker1, {from: company1});
       let isCollaborator1 = await jobInstance.collaborators(worker1);
       let assignee = await taskInstance.getAssignee(1);
+      let tasks = await taskInstance.getTaskByWorkerAddress(worker1);
       expect(assignee).to.be.equal(worker1);
+      expect(tasks[0].toNumber()).to.be.equal(1);
       expect(isCollaborator1).to.be.true;
     });
 

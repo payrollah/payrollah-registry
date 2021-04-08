@@ -85,6 +85,10 @@ contract Job is ERC165 {
         }
     }
 
+    function getTasks() public view returns (uint256[] memory) {
+        return tasks;
+    }
+
     function addTask(
         string memory _title,
         string memory _description,
@@ -130,7 +134,7 @@ contract Job is ERC165 {
     {
         taskRegistry.approveTask(taskId, msg.sender);
     }
-    
+
     function rejectTask(uint256 taskId)
         public
         onlyJobOwner
@@ -151,7 +155,7 @@ contract Job is ERC165 {
         collaborators[oldAssignedTo] = false;
         taskRegistry.reAssignTask(taskId, newAssignedTo);
     }
-    
+
     function _getNumRemainingTask() internal view returns (uint256) {
         uint256 remainingTask = 0;
         for (uint256 i = 0; i < tasks.length; i++) {

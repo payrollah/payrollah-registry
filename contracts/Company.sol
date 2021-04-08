@@ -18,7 +18,6 @@ contract Company is ERC721Full {
     }
 
     mapping(uint256 => company) public companies;
-    mapping(address => uint256) public companiesAddresses;
 
     event CompanyAdded(
         uint256 companyId,
@@ -53,7 +52,6 @@ contract Company is ERC721Full {
         company memory newCompany = company(_msgSender(), domain, name, true);
         uint256 newCompanyId = ++numCompanies;
         companies[newCompanyId] = newCompany;
-        companiesAddresses[_msgSender()] = newCompanyId;
         _safeMint(_msgSender(), newCompanyId);
         emit CompanyAdded(newCompanyId, _msgSender(), domain, name, true);
         return newCompanyId;
