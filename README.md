@@ -14,7 +14,7 @@ This package contains the ABI for the payrollah smart contracts. To use the pack
 
 ### Company(ERC721)
 
-Company will store the address, name and domain information of a given company registered with payrollah. You should be connecting to a global instance of Company contract at `0xf9fF6a0Fb432105D1417787fd5a039B02FcFcb78`. 
+Company will store the address, name and domain information of a given company registered with payrollah. You should be connecting to a global instance of Company contract at `0x27a7d618C8d67F8C57eb3eF4815f4C869242B0bE`. 
 
 Connecting to existing Company contract on Ethereum
 
@@ -62,6 +62,41 @@ The contract supports [all ERC721 methods](http://erc721.org/) with a few added 
 - isValidWorker(int `workerId`) - Check if worker is valid
 - isValidWorkerAddress(address `workerAddress`) - Check if given address is a valid worker
 - disableWorker(int `workerId`) - Disable worker from smart contract (a way to leave the platform)
+
+### Task(ERC721)
+
+Task stores all the past task created, who completed it, who endorsed it and its current status. We have decided to make all tasks public for now as we want to allow future company to be able to see the previous work done by worker.
+You can connect to the Task contract we have deployed at `0x2fBd0b674B86BBb7Fb7CC76cD815be95eeCcE6c9`.
+
+Connecting to existing Task contract on Ethereum
+```ts
+import {Task__factory} from "@payrollah/payrollah-registry";
+
+const connectedRegistry = Task__factory.connect(address, wallet);
+```
+
+List of available functions on Task contract
+
+The contract supports [all ERC721 methods](http://erc721.org/) with a few added functionality listed below:
+
+- constructor(string `name`, string `symbol`, address `workerRegistry`) - Will be used to initialize the contract
+- createTask(string `title`, string `description`, int `compensation`) - Creates a new task instance to be called by Job contract
+- isValidTask(int `taskId`) - Checks if the task exist
+- isCompletedTask(int `taskId`) - Checks if the task is completed
+- hasEvidence(int `taskId`) - Checks if evidence has been submitted before
+- isCandidate(int `taskId`, address `candidate`) - Checks if given address is indeed a candidate applying for task
+- isAssigned(int `taskId`) - Checks if task is assigned to anyone
+- getCompensation(int `taskId`) - Returns the value of compensation for the task in wei
+- getAssignee(int `taskId`) - Returns the assigned address for the task
+- getTaskByJob(address `jobAddress`) - Returns an array for all the task owned by job
+- getTaskByWorkerAddress(address `workerAddress`) - Returns an array of in-progress task for a given worker address
+- getCandidateByTask(int `taskId`) - Returns an array of all potential candidate for a task
+- addCandidates(int `taskId`, address `workerAddress`) - Adds a given candidate to a job
+- assignTask(int `taskId`, address `assignedTo`) - Assigns a candidate to a given task
+- submitEvidence(int `taskId`, string `evidence`,address `assignedTo`) - Allows the candidate to submit evidence via job contract
+- approveTask(int `taskId`, address `endorsedBy`) - Allows the job owner to check the evidence and accept the work
+- rejectEvidence(int `taskId`, address `endorsedBy`) - Allows the job owner to check the evidence and reject the work
+- reAssignTask(int `taskId`, address `assignedTo`) - Allow job owner to reassign the task if worker does not meet standards set
 
 ## Provider & Signer
 
