@@ -28,8 +28,9 @@ List of available functions on Company
 
 The contract supports [all ERC721 methods](http://erc721.org/) with a few added functionality listed below:
 
+- constructor(string `name`, string `symbol`) - Will be used to initialize the contract
 - companies(int `companyId`) - Given companyId return company information
-- createCompany(string `name`, string `domain`) - Register new company with Company Contract
+- createCompany(string `name`, string `domain`) - Register new company with Company contract
 - getCompanyAddress(int `companyId`) - Returns company wallet address
 - getCompanyIdByAddress(address `companyAddress`) - Get all companyId from Address
 - isActiveCompany(int `companyId`) - Check if company isActive
@@ -53,6 +54,7 @@ List of available functions on Worker contract
 
 The contract supports [all ERC721 methods](http://erc721.org/) with a few added functionality listed below:
 
+- constructor(string `name`, string `symbol`) - Will be used to initialize the contract
 - workers(int `workerId`) - Return worker information by id
 - createWorker() - Register new worker with Worker contract
 - getWorkerAddress(int `workerId`) - Get address from workerId
@@ -86,6 +88,7 @@ The contract supports [all ERC721 methods](http://erc721.org/) with a few added 
 - hasEvidence(int `taskId`) - Checks if evidence has been submitted before
 - isCandidate(int `taskId`, address `candidate`) - Checks if given address is indeed a candidate applying for task
 - isAssigned(int `taskId`) - Checks if task is assigned to anyone
+- tasks(int `taskId`) - Returns all information about the task
 - getCompensation(int `taskId`) - Returns the value of compensation for the task in wei
 - getAssignee(int `taskId`) - Returns the assigned address for the task
 - getTaskByJob(address `jobAddress`) - Returns an array for all the task owned by job
@@ -113,6 +116,37 @@ List of available functions on JobCreator contract:
 
 - constructor(address `companyRegistry`, address `workerRegistry`, address `taskRegistry`) - Will be used to initialize the contract
 - deployNewJob(string `title`, string `description`) - Deploys a new job contract
+
+### Job
+
+Job is a smart contract which will hold the compensation for all task. It will track the sub task required for the job to be completed. when you use JobCreator to deploy a job, an address will be returned. You can connect to the address of the job.
+
+Connecting to existing Job contract on Ethereum
+```ts
+import {JobCreator__factory} from "@payrollah/payrollah-registry";
+
+const connectedRegistry = JobCreator__factory.connect(address, wallet);
+```
+
+List of available functions on JobCreator contract:
+
+- constructor(address `taskRegistry`, address `jobOwner`, string `title`, string `description`)
+- status() - Returns status for job
+- tasks(int `index`) - Return task by order of creation
+- collaborators(address `workerAddress`) - Check if worker is a collaborator in a job
+- jobOwner() - Return owner of job
+- title() - Return title of job
+- description() - Return description of job
+- isJobTask(int `taskId`) - Check if given task is job's task
+- getTasks() - Return all task of this job
+- addTask(string `title`, string `description`, int `compensation`) - Add task for this job
+- addCandidates(int `taskId`, address `workerAddress`) - Adds a given candidate to this job
+- assignTask(int `taskId`, address `assignedTo`) - Assigns a candidate to a given task for this job
+- submitTask(int `taskId`, string `evidence`) - Allows the candidate to submit evidence for this job
+- approveTask(int `taskId`) - Allows the job owner to check the evidence and accept the work for this job
+- rejectEvidence(int `taskId`) - Allows the job owner to check the evidence and reject the work
+- reAssignTask(int `taskId`, address `assignedTo`) - Allow job owner to reassign the task if worker does not meet standards set for a task in this job
+- completeJob() - Allows job owner to complete the task and pay all collaborators
 
 ## Provider & Signer
 
