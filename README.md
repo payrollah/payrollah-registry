@@ -98,6 +98,22 @@ The contract supports [all ERC721 methods](http://erc721.org/) with a few added 
 - rejectEvidence(int `taskId`, address `endorsedBy`) - Allows the job owner to check the evidence and reject the work
 - reAssignTask(int `taskId`, address `assignedTo`) - Allow job owner to reassign the task if worker does not meet standards set
 
+### JobCreator
+
+JobCreator allows us to control who can deploy new jobs. This gives us greater security as we will know exactly who posted a job. You can connect to the JobCreator contract we have deployed at `0xC784727e7dD2689fD25277236E2526d36F907313`.
+
+Connecting to existing JobCreator contract on Ethereum
+```ts
+import {JobCreator__factory} from "@payrollah/payrollah-registry";
+
+const connectedRegistry = JobCreator__factory.connect(address, wallet);
+```
+
+List of available functions on JobCreator contract:
+
+- constructor(address `companyRegistry`, address `workerRegistry`, address `taskRegistry`) - Will be used to initialize the contract
+- deployNewJob(string `title`, string `description`) - Deploys a new job contract
+
 ## Provider & Signer
 
 Different ways to get provider or signer:
