@@ -3,12 +3,19 @@ pragma solidity ^0.5.0;
 import "@openzeppelin/contracts/token/ERC721/ERC721Full.sol";
 
 contract Worker is ERC721Full {
+    
+    // ERC165: Interface for this contract, can be calculated by calculateTaskERC721Selector()
+    // Only append new interface id for backward compatibility
+    bytes4 private constant _INTERFACE_ID_TASK = 0x2df483f1;
+    
     uint256 public numWorker = 0;
 
     constructor(string memory name, string memory symbol)
         public
         ERC721Full(name, symbol)
-    {}
+    {
+         _registerInterface(_INTERFACE_ID_TASK);
+    }
 
     struct worker {
         address workerAddress;
@@ -86,5 +93,21 @@ contract Worker is ERC721Full {
         onlyActiveWorker(workerId)
     {
         workers[workerId].isActive = false;
+    }
+}
+
+contract calculateWorkerERC721Selector {
+    // Using only core functions as getter and checker would cause a deep stack
+    function calculateSelector() public pure returns (bytes4) {
+        Worker i;
+        return
+            i.createWorker.selector ^
+            i.getWorkerAddress.selector ^
+            i.getWorkerIdByAddress.selector ^
+            i.isActiveWorker.selector ^
+            i.isExistingWorker.selector ^
+            i.isValidWorker.selector ^
+            i.isValidWorkerAddress.selector ^
+            i.disableWorker.selector;
     }
 }

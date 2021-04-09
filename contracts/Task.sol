@@ -10,7 +10,7 @@ contract Task is ERC721Full {
 
     // ERC165: Interface for this contract, can be calculated by calculateTaskERC721Selector()
     // Only append new interface id for backward compatibility
-    bytes4 private constant _INTERFACE_ID_TASK = 0x369077fa;
+    bytes4 private constant _INTERFACE_ID_TASK = 0x8e174bf1;
 
     constructor(
         string memory name,
@@ -298,19 +298,16 @@ contract Task is ERC721Full {
 }
 
 contract calculateTaskERC721Selector {
+    // Using only core functions as getter and checker would cause a deep stack
     function calculateSelector() public pure returns (bytes4) {
         Task i;
         return
             i.createTask.selector ^
-            i.isValidTask.selector ^
-            i.isCompletedTask.selector ^
-            i.isCandidate.selector ^
-            i.getCompensation.selector ^
-            i.getAssignee.selector ^
-            i.getAssignee.selector ^
             i.addCandidates.selector ^
             i.assignTask.selector ^
             i.submitEvidence.selector ^
-            i.approveTask.selector;
+            i.approveTask.selector ^
+            i.rejectEvidence.selector ^
+            i.reAssignTask.selector;
     }
 }
