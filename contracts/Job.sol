@@ -5,9 +5,10 @@ import "@openzeppelin/contracts/introspection/ERC165.sol";
 import "./Task.sol";
 
 contract Job is ERC165 {
+    
     // ERC165: Interface for this contract, can be calculated by calculateTaskERC721Selector()
     // Only append new interface id for backward compatibility
-    bytes4 private constant _INTERFACE_ID_TASK = 0xde500ce7;
+    bytes4 private constant _INTERFACE_ID_TASK = 0xcb9a08f2;
 
     enum StatusTypes {Created, InProgress, Completed}
     StatusTypes public status = StatusTypes.Created;
@@ -176,5 +177,23 @@ contract Job is ERC165 {
             assignee.transfer(taskRegistry.getCompensation(tasks[i]));
         }
         emit JobCompleted(address(this));
+    }
+}
+
+contract calculateJobSelector {
+    // Using only core functions as getter and checker would cause a deep stack
+    function calculateSelector() public pure returns (bytes4) {
+        Job i;
+        return
+            i.isJobTask.selector ^
+            i.getTasks.selector ^
+            i.addTask.selector ^
+            i.addCandidates.selector ^
+            i.assignTask.selector ^
+            i.submitTask.selector ^
+            i.approveTask.selector ^
+            i.rejectTask.selector ^
+            i.reAssignTask.selector ^
+            i.completeJob.selector;
     }
 }
