@@ -78,11 +78,14 @@ contract Job is ERC165 {
     event JobCompleted(address indexed jobAddress);
 
     function isJobTask(uint256 taskId) public view returns (bool) {
+        bool isTask = false;
         for (uint256 i = 0; i < tasks.length; i++) {
             if (tasks[i] == taskId) {
-                return true;
+                isTask = true;
+                break;
             }
         }
+        return isTask;
     }
 
     function getTasks() public view returns (uint256[] memory) {
@@ -122,6 +125,7 @@ contract Job is ERC165 {
         public
         onlyUncompletedJob
         onlyCollaborator
+        onlyJobTask(taskId)
     {
         taskRegistry.submitEvidence(taskId, evidence, msg.sender);
     }
