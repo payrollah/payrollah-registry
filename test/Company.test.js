@@ -143,8 +143,8 @@ contract("Company", (accounts) => {
 
     it("should be able to disable company", async () => {
       await companyInstance.disableCompany(1, {from: company1});
-      const isValid = await companyInstance.isActiveCompany(1);
-      expect(isValid).to.be.false;
+      const isActive = await companyInstance.isActiveCompany(1);
+      expect(isActive).to.be.false;
     });
 
     it("should not be able to disable non-existing companies", async () => {
@@ -161,13 +161,12 @@ contract("Company", (accounts) => {
       );
     });
 
-    it("should not be able to disable companies that are already in active", async () => {
+    it("should not be able to disable companies that are already inactive", async () => {
       await companyInstance.disableCompany(1, {from: company1});
       const disableError = companyInstance.disableCompany(1, {from: company1});
       await expect(disableError).to.be.rejectedWith(
         /VM Exception while processing transaction: revert company is not active/
       );
     });
-    
   });
 });
