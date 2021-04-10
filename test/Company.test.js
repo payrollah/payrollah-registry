@@ -14,8 +14,8 @@ contract("Company", (accounts) => {
   const platform = accounts[0];
   const company1 = accounts[1];
 
-  const name = "Apple"
-  const domain = "apple.com"
+  const name = "Apple";
+  const domain = "apple.com";
 
   let companyInstance;
 
