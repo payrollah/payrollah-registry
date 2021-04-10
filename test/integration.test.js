@@ -102,8 +102,10 @@ contract("Workflow", (accounts) => {
     it("should be able to approve task", async () => {
       await jobInstance.approveTask(1, {from: company1});
       let {endorsedBy, isComplete} = await taskInstance.tasks(1);
+      let balance = await web3.eth.getBalance(jobInstance.address);
       expect(endorsedBy).to.be.equal(company1);
       expect(isComplete).to.be.true;
+      expect(balance).to.be.equal("0");
     });
 
     it("should be able to complete job", async () => {
@@ -248,8 +250,10 @@ contract("Workflow", (accounts) => {
     it("should be able to approve task", async () => {
       await jobInstance.approveTask(1, {from: company1});
       let {endorsedBy, isComplete} = await taskInstance.tasks(1);
+      let balance = await web3.eth.getBalance(jobInstance.address);
       expect(endorsedBy).to.be.equal(company1);
       expect(isComplete).to.be.true;
+      expect(balance).to.be.equal("0");
     });
 
     it("should be able to complete job", async () => {

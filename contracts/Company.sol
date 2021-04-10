@@ -3,7 +3,6 @@ pragma solidity ^0.5.0;
 import "@openzeppelin/contracts/token/ERC721/ERC721Full.sol";
 
 contract Company is ERC721Full {
-    
     // ERC165: Interface for this contract, can be calculated by calculateTaskERC721Selector()
     // Only append new interface id for backward compatibility
     bytes4 private constant _INTERFACE_ID_TASK = 0x3c3ad21b;
@@ -28,9 +27,9 @@ contract Company is ERC721Full {
 
     event CompanyAdded(
         uint256 companyId,
-        address companyAddress,
+        address indexed companyAddress,
         string domain,
-        string name,
+        string indexed name,
         bool isActive
     );
 
@@ -98,7 +97,7 @@ contract Company is ERC721Full {
         returns (bool)
     {
         uint256 companyId = getCompanyIdByAddress(companyAddress);
-        return isActiveCompany(companyId) && isExistingCompany(companyId);
+        return isValidCompany(companyId);
     }
 
     function disableCompany(uint256 companyId)
@@ -126,4 +125,3 @@ contract calculateCompanyERC721Selector {
             i.disableCompany.selector;
     }
 }
-

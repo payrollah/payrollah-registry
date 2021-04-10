@@ -79,7 +79,7 @@ contract Task is ERC721Full {
     }
 
     modifier onlyIsNotAssigned(uint256 taskId) {
-        require(isAssigned(taskId) == false, "task not assigned to anyone");
+        require(isAssigned(taskId) == false, "task is assigned to someone");
         _;
     }
     modifier onlyValidTask(uint256 taskId) {
