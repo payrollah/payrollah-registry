@@ -5,7 +5,6 @@ import "@openzeppelin/contracts/introspection/ERC165.sol";
 import "./Task.sol";
 
 contract Job is ERC165 {
-    
     // ERC165: Interface for this contract, can be calculated by calculateTaskERC721Selector()
     // Only append new interface id for backward compatibility
     bytes4 private constant _INTERFACE_ID_TASK = 0xcb9a08f2;
@@ -134,6 +133,10 @@ contract Job is ERC165 {
         onlyJobTask(taskId)
     {
         taskRegistry.approveTask(taskId, msg.sender);
+        // Pay the person to who complete the task to unlock the work
+        address payable assignee =
+            address(uint160(taskRegistry.getAssignee(taskId)));
+        assignee.transfer(taskRegistry.getCompensation(taskId));
     }
 
     function rejectTask(uint256 taskId)
@@ -170,12 +173,6 @@ contract Job is ERC165 {
     function completeJob() public onlyJobOwner onlyUncompletedJob {
         require(_getNumRemainingTask() == 0, "not all task are complete");
         status = StatusTypes.Completed;
-        // Pay out to collaborators
-        for (uint256 i = 0; i < tasks.length; i++) {
-            address payable assignee =
-                address(uint160(taskRegistry.getAssignee(tasks[i])));
-            assignee.transfer(taskRegistry.getCompensation(tasks[i]));
-        }
         emit JobCompleted(address(this));
     }
 }
